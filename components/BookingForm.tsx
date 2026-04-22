@@ -50,6 +50,7 @@ export default function BookingForm({
           {...register("name")}
           className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-secondary outline-none"
           placeholder="John Doe"
+          suppressHydrationWarning
         />
         {errors.name && (
           <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
@@ -63,6 +64,7 @@ export default function BookingForm({
           type="email"
           className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-secondary outline-none"
           placeholder="john@example.com"
+          suppressHydrationWarning
         />
         {errors.email && (
           <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
@@ -74,6 +76,7 @@ export default function BookingForm({
         <select
           {...register("service")}
           className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-secondary outline-none"
+          suppressHydrationWarning
         >
           <option value="Web Dev">Website Development</option>
           <option value="Prompt Eng">Prompt Engineering</option>
@@ -88,6 +91,7 @@ export default function BookingForm({
           {...register("date")}
           type="date"
           className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-secondary outline-none"
+          suppressHydrationWarning
         />
         {errors.date && (
           <p className="text-red-500 text-sm mt-1">{errors.date.message}</p>
