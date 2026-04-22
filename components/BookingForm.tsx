@@ -109,6 +109,7 @@ export default function BookingForm({
         whileTap={{ scale: 0.98 }}
         type="submit"
         className="w-full bg-secondary text-white py-3 rounded-lg font-semibold hover:bg-secondary/90 transition-colors"
+        suppressHydrationWarning
       >
         Proceed to Payment
       </motion.button>
