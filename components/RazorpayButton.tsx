@@ -28,19 +28,51 @@ export default function RazorpayButton({
   const [loading, setLoading] = useState(false);
 
   const createOrder = async () => {
-    const res = await fetch("/api/create-order", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ amount }),
-    });
-    const data = await res.json();
-    return data.orderId;
+    try {
+      const res = await fetch("/api/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount }),
+      });
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        console.error("Order creation error:", errorData);
+        throw new Error(`Order creation failed: ${res.status}`);
+      }
+      
+      const data = await res.json();
+      if (!data.orderId) {
+        throw new Error("No order ID received");
+      }
+      return data.orderId;
+    } catch (error) {
+      console.error("Create order error:", error);
+      throw error;
+    }
   };
 
   const handlePayment = async () => {
     setLoading(true);
     try {
+      // Check if Razorpay key is set
+      if (!process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID) {
+        console.error("RAZORPAY_KEY_ID not set");
+        toast.error("Payment configuration missing. Contact support.");
+        setLoading(false);
+        return;
+      }
+
+      // Check if Razorpay script is loaded
+      if (!window.Razorpay) {
+        console.error("Razorpay script not loaded");
+        toast.error("Payment system loading. Please try again.");
+        setLoading(false);
+        return;
+      }
+
       const orderId = await createOrder();
+      console.log("Order created:", orderId);
 
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
@@ -80,7 +112,9 @@ export default function RazorpayButton({
       const razorpay = new window.Razorpay(options);
       razorpay.open();
     } catch (error) {
-      toast.error("Payment initiation failed.");
+      console.error("Payment initiation error:", error);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      toast.error(`Payment failed: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -90,7 +124,10 @@ export default function RazorpayButton({
     <>
       <Script
         src="https://checkout.razorpay.com/v1/checkout.js"
-        strategy="lazyOnload"
+        strategy="beforeInteractive"
+        onError={(error) => {
+          console.error("Failed to load Razorpay script:", error);
+        }}
       />
       <button
         onClick={handlePayment}
