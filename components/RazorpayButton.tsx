@@ -1,7 +1,6 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
-import Script from "next/script";
 
 declare global {
   interface Window {
@@ -26,6 +25,29 @@ export default function RazorpayButton({
   onSuccess,
 }: RazorpayButtonProps) {
   const [loading, setLoading] = useState(false);
+  const [scriptLoaded, setScriptLoaded] = useState(false);
+
+  // Load Razorpay script dynamically
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    script.onload = () => {
+      setScriptLoaded(true);
+      console.log("Razorpay script loaded successfully");
+    };
+    script.onerror = () => {
+      console.error("Failed to load Razorpay script");
+    };
+    document.body.appendChild(script);
+
+    return () => {
+      // Cleanup if component unmounts
+      if (document.body.contains(script)) {
+        document.body.removeChild(script);
+      }
+    };
+  }, []);
 
   const createOrder = async () => {
     try {
@@ -64,7 +86,7 @@ export default function RazorpayButton({
       }
 
       // Check if Razorpay script is loaded
-      if (!window.Razorpay) {
+      if (!window.Razorpay || !scriptLoaded) {
         console.error("Razorpay script not loaded");
         toast.error("Payment system loading. Please try again.");
         setLoading(false);
@@ -121,21 +143,13 @@ export default function RazorpayButton({
   };
 
   return (
-    <>
-      <Script
-        src="https://checkout.razorpay.com/v1/checkout.js"
-        strategy="beforeInteractive"
-        onError={(error) => {
-          console.error("Failed to load Razorpay script:", error);
-        }}
-      />
-      <button
-        onClick={handlePayment}
-        disabled={loading}
-        className="w-full bg-accent hover:bg-accent/90 text-white py-3 rounded-lg font-semibold transition-colors disabled:opacity-70"
-      >
-        {loading ? "Processing..." : "Pay with Razorpay"}
-      </button>
-    </>
+    <button
+      onClick={handlePayment}
+      disabled={loading || !scriptLoaded}
+      className="w-full bg-accent hover:bg-accent/90 text-white py-3 rounded-lg font-semibold transition-colors disabled:opacity-70"
+      title={!scriptLoaded ? "Loading payment system..." : ""}
+    >
+      {loading ? "Processing..." : "Pay with Razorpay"}
+    </button>
   );
 }
